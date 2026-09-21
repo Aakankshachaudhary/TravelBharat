@@ -3,15 +3,11 @@ import Footer from "../components/Footer";
 
 function MainLayout({ children }) {
   return (
-    <>
+    <div className="app-shell">
       <Navbar />
-
-      <main>
-        {children}
-      </main>
-
+      <main>{children}</main>
       <Footer />
-    </>
+    </div>
   );
 }
 
