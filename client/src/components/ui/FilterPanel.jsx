@@ -9,9 +9,17 @@ function FilterPanel({ filters = [], values = {}, onChange }) {
             onChange={(event) => onChange?.(filter.name, event.target.value)}
           >
             <option value="">All</option>
-            {filter.options.map((option) => (
-              <option value={option} key={option}>{option}</option>
-            ))}
+            {filter.options.map((option) => {
+              const optionValue =
+                typeof option === "object" ? option.value : option;
+              const optionLabel =
+                typeof option === "object" ? option.label : option;
+              return (
+                <option value={optionValue} key={optionValue}>
+                  {optionLabel}
+                </option>
+              );
+            })}
           </select>
         </label>
       ))}

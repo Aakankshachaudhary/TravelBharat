@@ -6,6 +6,7 @@ import StateDetails from "./pages/StateDetails";
 import DestinationDetails from "./pages/DestinationDetails";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
+import SearchResults from "./pages/SearchResults";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
           <Route path="/states/:stateSlug" element={<StateDetails />} />
           <Route path="/destinations/:destinationSlug" element={<DestinationDetails />} />
           <Route path="/about" element={<About />} />
+          <Route path="/search" element={<SearchResults />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </MainLayout>
