@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760">
+<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#DCEBF5"/><stop offset="1" stop-color="#ffffff"/></linearGradient></defs>
+<rect width="1200" height="760" fill="url(#sky)"/>
+<circle cx="930" cy="150" r="70" fill="#5F9BC2" opacity=".72"/>
+<path d="M0 500 L180 300 340 500 520 250 760 500 930 320 1200 520 V760 H0Z" fill="#234E70" opacity=".86"/>
+<path d="M0 565 Q220 505 440 565 T880 565 T1200 565 V760 H0Z" fill="#5F9BC2" opacity=".72"/>
+<rect x="0" y="610" width="1200" height="150" fill="#234E70" opacity=".28"/>
+<g fill="#234E70"><rect x="90" y="430" width="140" height="115" rx="8"/><path d="M70 435 L160 350 250 435Z"/><rect x="125" y="475" width="32" height="70" fill="#DCEBF5"/><rect x="180" y="465" width="25" height="25" fill="#DCEBF5"/></g>
+<text x="70" y="675" font-family="Arial, sans-serif" font-size="42" font-weight="700" fill="#fff">Rishikesh</text>
+<text x="70" y="718" font-family="Arial, sans-serif" font-size="24" fill="#fff">Uttarakhand • A Adventure</text>
+</svg>
