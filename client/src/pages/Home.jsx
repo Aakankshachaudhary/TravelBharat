@@ -1,18 +1,61 @@
-import { useNavigate } from "react-router-dom";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import SearchBar from "../components/ui/SearchBar";
 import StateCard from "../components/cards/StateCard";
 import DestinationCard from "../components/cards/DestinationCard";
 import CategoryCard from "../components/cards/CategoryCard";
+import LoadingSpinner from "../components/ui/LoadingSpinner";
+import ErrorMessage from "../components/ui/ErrorMessage";
 import { DESTINATION_CATEGORIES } from "../constants/appConstants";
-import { featuredStates, popularDestinations } from "../data/homeData";
+import { api } from "../services/api";
+
+const FEATURED_STATE_SLUGS = ["rajasthan", "kerala", "goa", "himachal-pradesh"];
+const POPULAR_DESTINATION_SLUGS = ["amber-fort", "munnar", "varanasi-ghats"];
 
 function Home() {
   const navigate = useNavigate();
+  const [states, setStates] = useState([]);
+  const [destinations, setDestinations] = useState([]);
+  const [status, setStatus] = useState("loading");
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    Promise.all([api.getStates(), api.getDestinations()])
+      .then(([stateData, destinationData]) => {
+        if (!active) return;
+        setStates(stateData);
+        setDestinations(destinationData);
+        setStatus("success");
+      })
+      .catch((err) => {
+        if (active) {
+          setError(err.message);
+          setStatus("error");
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const featuredStates = useMemo(
+    () =>
+      FEATURED_STATE_SLUGS.map((slug) =>
+        states.find((item) => item.slug === slug),
+      ).filter(Boolean),
+    [states],
+  );
+  const popularDestinations = useMemo(
+    () =>
+      POPULAR_DESTINATION_SLUGS.map((slug) =>
+        destinations.find((item) => item.slug === slug),
+      ).filter(Boolean),
+    [destinations],
+  );
 
   function handleSearch(value) {
-    if (!value) return;
-    navigate(`/search?q=${encodeURIComponent(value)}`);
+    if (value) navigate(`/search?q=${encodeURIComponent(value)}`);
   }
 
   return (
@@ -37,18 +80,16 @@ function Home() {
               </Link>
             </div>
           </div>
-
           <div
             className="hero-visual"
             aria-label="Aerial view representing India's diverse travel landscapes"
           >
             <div className="hero-visual__image" />
             <div className="hero-visual__badge">
-              <strong>36</strong>
+              <strong>{states.length || 36}</strong>
               <span>States & UTs</span>
             </div>
           </div>
-
           <div className="hero-search">
             <SearchBar onSearch={handleSearch} />
             <p className="search-feedback" aria-live="polite">
@@ -58,67 +99,77 @@ function Home() {
         </div>
       </section>
 
-      <section className="section" id="explore-india">
-        <div className="container">
-          <div className="section-heading">
-            <div>
-              <span className="section-kicker">Start exploring</span>
-              <h2>India has a story for every traveller.</h2>
-            </div>
-            <p>
-              From royal heritage to mountain escapes, discover experiences that
-              match the way you want to travel.
-            </p>
-          </div>
-          <div className="category-grid">
-            {DESTINATION_CATEGORIES.map((category) => (
-              <CategoryCard key={category.name} category={category} />
-            ))}
-          </div>
+      {status === "error" && (
+        <div className="container" style={{ paddingTop: "24px" }}>
+          <ErrorMessage title="Live catalogue unavailable" message={error} />
         </div>
-      </section>
+      )}
+      {status === "loading" && (
+        <div className="container">
+          <LoadingSpinner />
+        </div>
+      )}
 
-      <section className="section section--muted">
-        <div className="container">
-          <div className="section-heading">
-            <div>
-              <span className="section-kicker">Popular right now</span>
-              <h2>Places worth putting on your list.</h2>
+      {status === "success" && (
+        <>
+          <section className="section" id="explore-india">
+            <div className="container">
+              <div className="section-heading">
+                <div>
+                  <span className="section-kicker">Start exploring</span>
+                  <h2>India has a story for every traveller.</h2>
+                </div>
+                <p>
+                  From royal heritage to mountain escapes, discover experiences
+                  that match the way you want to travel.
+                </p>
+              </div>
+              <div className="category-grid">
+                {DESTINATION_CATEGORIES.map((category) => (
+                  <CategoryCard key={category.name} category={category} />
+                ))}
+              </div>
             </div>
-            <Link className="section-link" to="/states">
-              View all states →
-            </Link>
-          </div>
-          <div className="destination-grid">
-            {popularDestinations.map((destination) => (
-              <DestinationCard
-                key={destination.name}
-                destination={destination}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="section">
-        <div className="container">
-          <div className="section-heading">
-            <div>
-              <span className="section-kicker">Featured states</span>
-              <h2>Choose a state. Find your next experience.</h2>
+          </section>
+          <section className="section section--muted">
+            <div className="container">
+              <div className="section-heading">
+                <div>
+                  <span className="section-kicker">Popular right now</span>
+                  <h2>Places worth putting on your list.</h2>
+                </div>
+                <Link className="section-link" to="/states">
+                  View all states →
+                </Link>
+              </div>
+              <div className="destination-grid">
+                {popularDestinations.map((d) => (
+                  <DestinationCard key={d.slug} destination={d} />
+                ))}
+              </div>
             </div>
-            <p>
-              Explore destinations with context about the places, people and
-              culture that make each state different.
-            </p>
-          </div>
-          <div className="state-grid">
-            {featuredStates.map((state) => (
-              <StateCard key={state.name} state={state} />
-            ))}
-          </div>
-        </div>
-      </section>
+          </section>
+          <section className="section">
+            <div className="container">
+              <div className="section-heading">
+                <div>
+                  <span className="section-kicker">Featured states</span>
+                  <h2>Choose a state. Find your next experience.</h2>
+                </div>
+                <p>
+                  Explore destinations with context about the places, people and
+                  culture that make each state different.
+                </p>
+              </div>
+              <div className="state-grid">
+                {featuredStates.map((s) => (
+                  <StateCard key={s.slug} state={s} />
+                ))}
+              </div>
+            </div>
+          </section>
+        </>
+      )}
 
       <section className="travel-info">
         <div className="container travel-info__inner">
@@ -126,9 +177,9 @@ function Home() {
             <span className="section-kicker">Plan with confidence</span>
             <h2>Useful travel information, not just pretty places.</h2>
             <p>
-              TravelBharat is being built to bring destination details, timing,
-              entry information, nearby attractions and practical planning
-              context together.
+              TravelBharat brings destination details, timing, entry
+              information, nearby attractions and practical planning context
+              together.
             </p>
           </div>
           <div className="info-list">
@@ -159,5 +210,4 @@ function Home() {
     </>
   );
 }
-
 export default Home;

@@ -1,15 +1,49 @@
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import StateCard from "../components/cards/StateCard";
 import DestinationCard from "../components/cards/DestinationCard";
 import EmptyState from "../components/ui/EmptyState";
-import { stateBySlug, states } from "../data/states";
-import { destinations, destinationBySlug } from "../data/destinations";
+import LoadingSpinner from "../components/ui/LoadingSpinner";
+import ErrorMessage from "../components/ui/ErrorMessage";
+import { api } from "../services/api";
 
 function StateDetails() {
   const { stateSlug } = useParams();
-  const state = stateBySlug[stateSlug];
+  const [state, setState] = useState(null);
+  const [allStates, setAllStates] = useState([]);
+  const [status, setStatus] = useState("loading");
+  const [error, setError] = useState("");
 
-  if (!state) {
+  useEffect(() => {
+    let active = true;
+    setStatus("loading");
+    Promise.all([api.getState(stateSlug), api.getStates()])
+      .then(([stateData, statesData]) => {
+        if (!active) return;
+        setState(stateData);
+        setAllStates(statesData);
+        setStatus("success");
+      })
+      .catch((err) => {
+        if (!active) return;
+        setError(err.message);
+        setStatus(err.status === 404 ? "not-found" : "error");
+      });
+    return () => {
+      active = false;
+    };
+  }, [stateSlug]);
+
+  if (status === "loading")
+    return (
+      <section className="page-intro">
+        <div className="container">
+          <LoadingSpinner />
+        </div>
+      </section>
+    );
+
+  if (status === "not-found") {
     return (
       <section className="page-intro page-intro--center">
         <div className="container narrow-content">
@@ -25,18 +59,17 @@ function StateDetails() {
     );
   }
 
-  const featuredSlugs = state.popularDestinationSlugs?.length
-    ? state.popularDestinationSlugs
-    : Object.values(destinationBySlug)
-        .filter((destination) => destination.stateSlug === state.slug)
-        .slice(0, 4)
-        .map((destination) => destination.slug);
+  if (status === "error")
+    return (
+      <section className="page-intro">
+        <div className="container">
+          <ErrorMessage title="Could not load state" message={error} />
+        </div>
+      </section>
+    );
 
-  const popularDestinations = featuredSlugs
-    .map((slug) => destinationBySlug[slug])
-    .filter(Boolean);
-
-  const relatedStates = states
+  const popularDestinations = state.destinations || [];
+  const relatedStates = allStates
     .filter((item) => item.slug !== state.slug)
     .slice(0, 4);
 
