@@ -7,6 +7,9 @@ import DestinationDetails from "./pages/DestinationDetails";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 import SearchResults from "./pages/SearchResults";
+import AdminLogin from "./pages/AdminLogin";
+import AdminDashboard from "./pages/AdminDashboard";
+import ProtectedAdminRoute from "./pages/ProtectedAdminRoute";
 
 function App() {
   return (
@@ -19,6 +22,8 @@ function App() {
           <Route path="/destinations/:destinationSlug" element={<DestinationDetails />} />
           <Route path="/about" element={<About />} />
           <Route path="/search" element={<SearchResults />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route element={<ProtectedAdminRoute />}><Route path="/admin" element={<AdminDashboard />} /></Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
       </MainLayout>
@@ -27,3 +32,4 @@ function App() {
 }
 
 export default App;
+

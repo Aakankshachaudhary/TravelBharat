@@ -4,6 +4,8 @@ import Destination from "../models/Destination.js";
 import City from "../models/City.js";
 import Category from "../models/Category.js";
 import Admin from "../models/Admin.js";
+import { hashPassword } from "../utils/auth.js";
+import { env } from "../config/env.js";
 import states from "../data/states.json" with { type: "json" };
 import destinations from "../data/destinations.json" with { type: "json" };
 
@@ -38,11 +40,10 @@ const cities = [...new Map(
 ).values()];
 await City.insertMany(cities);
 
-await Admin.updateOne(
-  { email: "admin@travelbharat.local" },
-  { $set: { name: "TravelBharat Admin", role: "admin", active: true } },
-  { upsert: true },
-);
+if (env.adminEmail && env.adminPassword) {
+  const passwordHash = await hashPassword(env.adminPassword);
+  await Admin.updateOne({ email: env.adminEmail.toLowerCase() }, { $set: { name: "TravelBharat Admin", role: "admin", active: true, passwordHash } }, { upsert: true });
+}
 
 console.log(`Seeded ${states.length} states, ${destinations.length} destinations, ${cities.length} cities and ${categories.length} categories.`);
 await disconnectDatabase();

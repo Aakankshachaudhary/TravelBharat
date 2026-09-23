@@ -809,3 +809,17 @@ The initial TravelBharat API structure is:
 ```
 
 This API structure provides a clear foundation for implementing the TravelBharat backend and connecting it with the React frontend.
+
+## Phase 6 Authentication APIs
+
+### POST `/api/auth/login`
+
+Authenticates an active admin/editor using email and password and returns a signed JWT access token.
+
+### GET `/api/auth/me`
+
+Requires `Authorization: Bearer <token>` and returns the current authenticated admin profile.
+
+### Protected destination mutations
+
+`POST /api/destinations`, `PUT /api/destinations/:slug`, and `DELETE /api/destinations/:slug` require a valid JWT and an `admin` or `editor` role.

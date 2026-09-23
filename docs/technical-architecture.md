@@ -558,3 +558,6 @@ The final technical architecture of TravelBharat will follow:
 ```
 
 This architecture provides a strong foundation for building TravelBharat as a scalable, secure, maintainable, and portfolio-oriented full-stack tourism platform.
+## Phase 6 security layer
+
+The API uses stateless JWT access tokens for the admin workspace. Passwords are hashed with Node.js `crypto.scrypt`; destination mutations require a verified active admin account and role authorization. Secrets and administrator credentials are supplied through environment variables and are never stored in source control.

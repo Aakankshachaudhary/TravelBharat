@@ -9,6 +9,7 @@ import { notFound } from "./middleware/notFound.js";
 import stateRoutes from "./routes/stateRoutes.js";
 import destinationRoutes from "./routes/destinationRoutes.js";
 import healthRoutes from "./routes/healthRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
 import { seedDatabase } from "./utils/seedDatabase.js";
 
 const app = express();
@@ -26,6 +27,7 @@ app.get("/", (req, res) => res.json({
 }));
 
 app.use("/api/health", healthRoutes);
+app.use("/api/auth", authRoutes);
 app.use("/api/states", stateRoutes);
 app.use("/api/destinations", destinationRoutes);
 

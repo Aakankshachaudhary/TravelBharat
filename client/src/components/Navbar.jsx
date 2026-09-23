@@ -40,6 +40,7 @@ function Navbar() {
               {link.label}
             </NavLink>
           ))}
+          <NavLink to="/admin/login" onClick={closeMenu} className="nav-link">Admin</NavLink>
           <Button variant="secondary" className="navbar__cta">Plan a trip</Button>
         </div>
       </nav>

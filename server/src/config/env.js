@@ -1,6 +1,6 @@
 import "dotenv/config";
 
-const required = ["MONGODB_URI"];
+const required = ["MONGODB_URI", "JWT_SECRET"];
 
 for (const key of required) {
   if (!process.env[key]) {
@@ -13,6 +13,9 @@ export const env = {
   nodeEnv: process.env.NODE_ENV || "development",
   mongoUri: process.env.MONGODB_URI,
   clientUrl: process.env.CLIENT_URL || "http://localhost:5173",
-  adminApiKey: process.env.ADMIN_API_KEY || "",
+  jwtSecret: process.env.JWT_SECRET || "",
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN || "8h",
+  adminEmail: process.env.ADMIN_EMAIL || "",
+  adminPassword: process.env.ADMIN_PASSWORD || "",
   seedOnStart: process.env.SEED_ON_START === "true",
 };

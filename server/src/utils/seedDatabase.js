@@ -3,6 +3,8 @@ import Destination from "../models/Destination.js";
 import City from "../models/City.js";
 import Category from "../models/Category.js";
 import Admin from "../models/Admin.js";
+import { hashPassword } from "../utils/auth.js";
+import { env } from "../config/env.js";
 import states from "../data/states.json" with { type: "json" };
 import destinations from "../data/destinations.json" with { type: "json" };
 
@@ -20,7 +22,13 @@ export async function seedDatabase() {
   const stateCount = await State.estimatedDocumentCount();
   const destinationCount = await Destination.estimatedDocumentCount();
 
-  if (stateCount > 0 || destinationCount > 0) return;
+  if (stateCount > 0 || destinationCount > 0) {
+    if (env.adminEmail && env.adminPassword) {
+      const passwordHash = await hashPassword(env.adminPassword);
+      await Admin.updateOne({ email: env.adminEmail.toLowerCase() }, { $set: { name: "TravelBharat Admin", role: "admin", active: true, passwordHash } }, { upsert: true });
+    }
+    return;
+  }
 
   await State.insertMany(states.map(({ id, ...state }) => state));
   await Destination.insertMany(destinations.map(({ id, ...destination }) => ({
@@ -38,11 +46,10 @@ export async function seedDatabase() {
   ).values()];
   await City.insertMany(cities);
 
-  await Admin.updateOne(
-    { email: "admin@travelbharat.local" },
-    { $set: { name: "TravelBharat Admin", role: "admin", active: true } },
-    { upsert: true },
-  );
+  if (env.adminEmail && env.adminPassword) {
+    const passwordHash = await hashPassword(env.adminPassword);
+    await Admin.updateOne({ email: env.adminEmail.toLowerCase() }, { $set: { name: "TravelBharat Admin", role: "admin", active: true, passwordHash } }, { upsert: true });
+  }
 
   console.log(`Database seeded: ${states.length} states, ${destinations.length} destinations.`);
 }

@@ -1,7 +1,10 @@
 import { Router } from "express";
-import { requireAdminApiKey } from "../middleware/adminKey.js";
+import { authenticateJWT, requireRoles } from "../middleware/auth.js";
 import { validateBody } from "../middleware/validate.js";
-import { destinationSchema, destinationUpdateSchema } from "../validators/destination.js";
+import {
+  destinationSchema,
+  destinationUpdateSchema,
+} from "../validators/destination.js";
 import {
   createDestination,
   deleteDestination,
@@ -14,8 +17,25 @@ const router = Router();
 
 router.get("/", getDestinations);
 router.get("/:slug", getDestinationBySlug);
-router.post("/", requireAdminApiKey, validateBody(destinationSchema), createDestination);
-router.put("/:slug", requireAdminApiKey, validateBody(destinationUpdateSchema), updateDestination);
-router.delete("/:slug", requireAdminApiKey, deleteDestination);
+router.post(
+  "/",
+  authenticateJWT,
+  requireRoles("admin", "editor"),
+  validateBody(destinationSchema),
+  createDestination,
+);
+router.put(
+  "/:slug",
+  authenticateJWT,
+  requireRoles("admin", "editor"),
+  validateBody(destinationUpdateSchema),
+  updateDestination,
+);
+router.delete(
+  "/:slug",
+  authenticateJWT,
+  requireRoles("admin", "editor"),
+  deleteDestination,
+);
 
 export default router;
