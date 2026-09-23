@@ -35,3 +35,7 @@ npm run preview
 ```
 
 Set `VITE_API_BASE_URL` in `client/.env` when the API is not running at the default local URL.
+
+## Deployment
+
+Deploy this Vite application with the project root set to `client`. Configure `VITE_API_BASE_URL` with the deployed TravelBharat API URL. `vercel.json` provides the SPA rewrite required for React Router direct navigation.

@@ -161,7 +161,19 @@ Admin:
 - Phase 5 — Backend + MongoDB
 - Phase 6 — JWT Admin Authentication & Content Management
 - Phase 7 — Production Quality
-- Phase 8 — Deployment
+- Phase 8 — Deployment & Production Readiness
+
+## Deployment architecture
+
+TravelBharat is deployment-ready as three separated services:
+
+- **Vercel** — React/Vite frontend
+- **Render** — Express API
+- **MongoDB Atlas** — production database
+
+Deployment configuration is included in `render.yaml`, `client/vercel.json`, and `docs/phase-8-deployment.md`. The production frontend receives the API URL through `VITE_API_BASE_URL`; backend secrets remain in the hosting provider environment.
+
+The API exposes both `/api/health` for liveness and `/api/health/ready` for database-aware readiness checks. The server also handles graceful shutdown signals for production hosts.
 
 ## Security notes
 
@@ -174,3 +186,4 @@ Admin:
 ## Documentation
 
 Detailed architecture and implementation notes are available in the `docs/` directory, including `phase-7-production-quality.md` and `auth-and-admin.md`.
+

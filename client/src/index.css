@@ -1495,3 +1495,22 @@ a:focus-visible {
     animation-iteration-count: 1 !important;
   }
 }
+/* Phase 8 — deployment/service status */
+.service-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.service-status__dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.service-status--ready { color: #176b45; }
+.service-status--offline { color: #a32929; }
+.service-status--loading { color: #765b16; }
