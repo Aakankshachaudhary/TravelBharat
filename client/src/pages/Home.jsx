@@ -6,6 +6,7 @@ import DestinationCard from "../components/cards/DestinationCard";
 import CategoryCard from "../components/cards/CategoryCard";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 import ErrorMessage from "../components/ui/ErrorMessage";
+import PageMeta from "../components/ui/PageMeta";
 import { DESTINATION_CATEGORIES } from "../constants/appConstants";
 import { api } from "../services/api";
 
@@ -18,9 +19,13 @@ function Home() {
   const [destinations, setDestinations] = useState([]);
   const [status, setStatus] = useState("loading");
   const [error, setError] = useState("");
+  const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
     let active = true;
+    setStatus("loading");
+    setError("");
+
     Promise.all([api.getStates(), api.getDestinations()])
       .then(([stateData, destinationData]) => {
         if (!active) return;
@@ -29,15 +34,15 @@ function Home() {
         setStatus("success");
       })
       .catch((err) => {
-        if (active) {
-          setError(err.message);
-          setStatus("error");
-        }
+        if (!active || err.name === "AbortError") return;
+        setError(err.message);
+        setStatus("error");
       });
+
     return () => {
       active = false;
     };
-  }, []);
+  }, [retryKey]);
 
   const featuredStates = useMemo(
     () =>
@@ -46,6 +51,7 @@ function Home() {
       ).filter(Boolean),
     [states],
   );
+
   const popularDestinations = useMemo(
     () =>
       POPULAR_DESTINATION_SLUGS.map((slug) =>
@@ -60,6 +66,10 @@ function Home() {
 
   return (
     <>
+      <PageMeta
+        title="Explore India, State by State"
+        description="Explore Indian states, destinations, culture, cuisine and practical travel information with TravelBharat."
+      />
       <section className="hero-section">
         <div className="container hero-section__content">
           <div className="hero-section__copy">
@@ -83,8 +93,9 @@ function Home() {
           <div
             className="hero-visual"
             aria-label="Aerial view representing India's diverse travel landscapes"
+            role="img"
           >
-            <div className="hero-visual__image" />
+            <div className="hero-visual__image" aria-hidden="true" />
             <div className="hero-visual__badge">
               <strong>{states.length || 36}</strong>
               <span>States & UTs</span>
@@ -100,13 +111,17 @@ function Home() {
       </section>
 
       {status === "error" && (
-        <div className="container" style={{ paddingTop: "24px" }}>
-          <ErrorMessage title="Live catalogue unavailable" message={error} />
+        <div className="container page-alert">
+          <ErrorMessage
+            title="Live catalogue unavailable"
+            message={error}
+            onRetry={() => setRetryKey((key) => key + 1)}
+          />
         </div>
       )}
       {status === "loading" && (
         <div className="container">
-          <LoadingSpinner />
+          <LoadingSpinner label="Loading travel catalogue" />
         </div>
       )}
 
@@ -143,8 +158,8 @@ function Home() {
                 </Link>
               </div>
               <div className="destination-grid">
-                {popularDestinations.map((d) => (
-                  <DestinationCard key={d.slug} destination={d} />
+                {popularDestinations.map((destination) => (
+                  <DestinationCard key={destination.slug} destination={destination} />
                 ))}
               </div>
             </div>
@@ -162,8 +177,8 @@ function Home() {
                 </p>
               </div>
               <div className="state-grid">
-                {featuredStates.map((s) => (
-                  <StateCard key={s.slug} state={s} />
+                {featuredStates.map((state) => (
+                  <StateCard key={state.slug} state={state} />
                 ))}
               </div>
             </div>
@@ -191,18 +206,12 @@ function Home() {
             <div>
               <span>02</span>
               <strong>Discover nearby</strong>
-              <p>
-                Find related places so one destination can become a complete
-                itinerary.
-              </p>
+              <p>Find related places so one destination can become a complete itinerary.</p>
             </div>
             <div>
               <span>03</span>
               <strong>Explore by interest</strong>
-              <p>
-                Move between heritage, nature, religious, adventure and beach
-                experiences.
-              </p>
+              <p>Move between heritage, nature, religious, adventure and beach experiences.</p>
             </div>
           </div>
         </div>
@@ -210,4 +219,5 @@ function Home() {
     </>
   );
 }
+
 export default Home;

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import Button from "./Button";
 
 function SearchBar({
@@ -6,6 +6,7 @@ function SearchBar({
   placeholder = "Search destinations, states or experiences",
   initialValue = "",
 }) {
+  const inputId = useId();
   const [value, setValue] = useState(initialValue);
 
   useEffect(() => {
@@ -19,19 +20,20 @@ function SearchBar({
 
   return (
     <form className="search-bar" onSubmit={handleSubmit} role="search">
-      <label className="sr-only" htmlFor="site-search">
+      <label className="sr-only" htmlFor={inputId}>
         Search TravelBharat
       </label>
       <span className="search-bar__icon" aria-hidden="true">
         ⌕
       </span>
       <input
-        id="site-search"
+        id={inputId}
         type="search"
         value={value}
         onChange={(event) => setValue(event.target.value)}
         placeholder={placeholder}
         autoComplete="off"
+        enterKeyHint="search"
       />
       <Button type="submit">Search</Button>
     </form>

@@ -6,6 +6,7 @@ import ErrorMessage from "../components/ui/ErrorMessage";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 import FilterPanel from "../components/ui/FilterPanel";
 import SearchBar from "../components/ui/SearchBar";
+import PageMeta from "../components/ui/PageMeta";
 import { DESTINATION_CATEGORIES } from "../constants/appConstants";
 import { api } from "../services/api";
 
@@ -19,8 +20,10 @@ function SearchResults() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [states, setStates] = useState([]);
   const [destinations, setDestinations] = useState([]);
-  const [status, setStatus] = useState("loading");
+  const [statesStatus, setStatesStatus] = useState("loading");
+  const [destinationStatus, setDestinationStatus] = useState("loading");
   const [error, setError] = useState("");
+  const [retryKey, setRetryKey] = useState(0);
 
   const query = searchParams.get("q") || "";
   const state = searchParams.get("state") || "";
@@ -30,49 +33,56 @@ function SearchResults() {
 
   useEffect(() => {
     let active = true;
-    api
-      .getStates()
+    setStatesStatus("loading");
+
+    api.getStates()
       .then((data) => {
-        if (active) setStates(data);
+        if (active) {
+          setStates(data);
+          setStatesStatus("success");
+        }
       })
       .catch((err) => {
-        if (active) {
+        if (active && err.name !== "AbortError") {
           setError(err.message);
-          setStatus("error");
+          setStatesStatus("error");
         }
       });
+
     return () => {
       active = false;
     };
-  }, []);
+  }, [retryKey]);
 
   useEffect(() => {
     let active = true;
-    setStatus("loading");
-    api
-      .getDestinations({
-        q: query,
-        state,
-        city,
-        category,
-        sort: sort === "relevance" ? "name" : sort,
-      })
+    setDestinationStatus("loading");
+    setError("");
+
+    api.getDestinations({
+      q: query,
+      state,
+      city,
+      category,
+      sort: sort === "relevance" ? "name" : sort,
+    })
       .then((data) => {
         if (active) {
           setDestinations(data);
-          setStatus("success");
+          setDestinationStatus("success");
         }
       })
       .catch((err) => {
-        if (active) {
+        if (active && err.name !== "AbortError") {
           setError(err.message);
-          setStatus("error");
+          setDestinationStatus("error");
         }
       });
+
     return () => {
       active = false;
     };
-  }, [query, state, city, category, sort]);
+  }, [query, state, city, category, sort, retryKey]);
 
   const stateOptions = useMemo(
     () => states.map((item) => ({ value: item.slug, label: item.name })),
@@ -80,15 +90,10 @@ function SearchResults() {
   );
 
   const cityOptions = useMemo(() => {
-    // City choices remain derived from the currently loaded API catalogue.
     const values = destinations
-      .map(
-        (item) =>
-          item.city ||
-          item.location
-            ?.split(",")[0]
-            ?.replace(/^Near\s+/i, "")
-            .trim(),
+      .map((item) =>
+        item.city ||
+        item.location?.split(",")[0]?.replace(/^Near\s+/i, "").trim(),
       )
       .filter(Boolean);
     return [...new Set(values)].sort((a, b) => a.localeCompare(b));
@@ -99,38 +104,25 @@ function SearchResults() {
     Object.entries(changes).forEach(([key, value]) =>
       value ? next.set(key, value) : next.delete(key),
     );
-    if (changes.state !== undefined && changes.state !== state)
-      next.delete("city");
+    if (changes.state !== undefined && changes.state !== state) next.delete("city");
     setSearchParams(next);
   }
 
   const hasFilters = Boolean(state || city || category || sort !== "relevance");
-
-  if (status === "loading")
-    return (
-      <section className="page-intro">
-        <div className="container">
-          <LoadingSpinner />
-        </div>
-      </section>
-    );
-  if (status === "error")
-    return (
-      <section className="page-intro">
-        <div className="container">
-          <ErrorMessage title="Search service unavailable" message={error} />
-        </div>
-      </section>
-    );
+  const isLoading = statesStatus === "loading" || destinationStatus === "loading";
+  const hasError = statesStatus === "error" || destinationStatus === "error";
 
   return (
     <section className="page-intro search-page">
+      <PageMeta
+        title={query ? `Search results for ${query}` : "Explore destinations"}
+        description="Search TravelBharat's destination catalogue by place, state, city, category or travel interest."
+      />
       <div className="container">
         <span className="section-kicker">Discover India</span>
         <h1>Find a place that fits your journey.</h1>
         <p className="search-page__intro">
-          Search the live destination catalogue by place, state, city, category
-          or travel interest.
+          Search the live destination catalogue by place, state, city, category or travel interest.
         </p>
         <div className="search-page__bar">
           <SearchBar
@@ -139,98 +131,91 @@ function SearchResults() {
             placeholder="Try Jaipur, Rajasthan, Fort, Beach or Temple"
           />
         </div>
-        <div className="search-suggestions">
+        <div className="search-suggestions" aria-label="Suggested searches">
           <span>Try:</span>
           {["Jaipur", "Rajasthan", "Fort", "Beach", "Temple"].map((item) => (
-            <button
-              key={item}
-              type="button"
-              onClick={() => updateParams({ q: item })}
-            >
+            <button key={item} type="button" onClick={() => updateParams({ q: item })}>
               {item}
             </button>
           ))}
         </div>
-        <div className="search-toolbar">
-          <div>
-            <strong>{destinations.length}</strong>{" "}
-            {destinations.length === 1 ? "destination" : "destinations"}
-            {query && <span> matching “{query}”</span>}
-          </div>
-          <label className="sort-control">
-            <span>Sort by</span>
-            <select
-              value={sort}
-              onChange={(e) => updateParams({ sort: e.target.value })}
-            >
-              {SORT_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-        <div className="search-layout">
-          <div>
-            <FilterPanel
-              filters={[
-                { name: "state", label: "State / UT", options: stateOptions },
-                {
-                  name: "city",
-                  label: "City",
-                  options: cityOptions.map((item) => ({
-                    value: item,
-                    label: item,
-                  })),
-                },
-                {
-                  name: "category",
-                  label: "Category",
-                  options: DESTINATION_CATEGORIES.map((item) => ({
-                    value: item.name,
-                    label: item.name,
-                  })),
-                },
-              ]}
-              values={{ state, city, category }}
-              onChange={(name, value) => updateParams({ [name]: value })}
-            />
-            {hasFilters && (
-              <button
-                className="clear-filters"
-                type="button"
-                onClick={() => setSearchParams(query ? { q: query } : {})}
-              >
-                Clear filters
-              </button>
-            )}
-          </div>
-          <div className="search-results" aria-live="polite">
-            {destinations.length ? (
-              <div className="destination-grid">
-                {destinations.map((destination) => (
-                  <DestinationCard
-                    key={destination.slug}
-                    destination={destination}
-                  />
-                ))}
+
+        {isLoading && <LoadingSpinner label="Searching destinations" />}
+
+        {hasError && !isLoading && (
+          <ErrorMessage
+            title="Search service unavailable"
+            message={error}
+            onRetry={() => setRetryKey((key) => key + 1)}
+          />
+        )}
+
+        {!isLoading && !hasError && (
+          <>
+            <div className="search-toolbar">
+              <div aria-live="polite">
+                <strong>{destinations.length}</strong>{" "}
+                {destinations.length === 1 ? "destination" : "destinations"}
+                {query && <span> matching “{query}”</span>}
               </div>
-            ) : (
-              <EmptyState
-                title="No destinations found"
-                message="Try a broader place name, remove a filter, or choose one of the suggested searches above."
-              />
-            )}
-          </div>
-        </div>
-        <p className="search-page__back">
-          <Link to="/states">
-            Prefer browsing? Explore all states and UTs →
-          </Link>
-        </p>
+              <label className="sort-control" htmlFor="destination-sort">
+                <span>Sort by</span>
+                <select
+                  id="destination-sort"
+                  value={sort}
+                  onChange={(e) => updateParams({ sort: e.target.value })}
+                >
+                  {SORT_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <div className="search-layout">
+              <div>
+                <FilterPanel
+                  filters={[
+                    { name: "state", label: "State / UT", options: stateOptions },
+                    { name: "city", label: "City", options: cityOptions.map((item) => ({ value: item, label: item })) },
+                    { name: "category", label: "Category", options: DESTINATION_CATEGORIES.map((item) => ({ value: item.name, label: item.name })) },
+                  ]}
+                  values={{ state, city, category }}
+                  onChange={(name, value) => updateParams({ [name]: value })}
+                />
+                {hasFilters && (
+                  <button
+                    className="clear-filters"
+                    type="button"
+                    onClick={() => setSearchParams(query ? { q: query } : {})}
+                  >
+                    Clear filters
+                  </button>
+                )}
+              </div>
+              <div className="search-results" aria-live="polite">
+                {destinations.length ? (
+                  <div className="destination-grid">
+                    {destinations.map((destination) => (
+                      <DestinationCard key={destination.slug} destination={destination} />
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState
+                    title="No destinations found"
+                    message="Try a broader place name, remove a filter, or choose one of the suggested searches above."
+                  />
+                )}
+              </div>
+            </div>
+            <p className="search-page__back">
+              <Link to="/states">Prefer browsing? Explore all states and UTs →</Link>
+            </p>
+          </>
+        )}
       </div>
     </section>
   );
 }
+
 export default SearchResults;

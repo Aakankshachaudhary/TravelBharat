@@ -1,6 +1,6 @@
 function LoadingSpinner({ label = "Loading" }) {
   return (
-    <div className="loading-state" role="status" aria-live="polite">
+    <div className="loading-state" role="status" aria-live="polite" aria-busy="true">
       <span className="spinner" aria-hidden="true" />
       <span>{label}...</span>
     </div>
@@ -8,3 +8,4 @@ function LoadingSpinner({ label = "Loading" }) {
 }
 
 export default LoadingSpinner;
+
