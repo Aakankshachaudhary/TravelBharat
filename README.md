@@ -1,4 +1,4 @@
-# 🇮🇳 TravelBharat – Explore India State by State
+#  TravelBharat – Explore India State by State
 
 TravelBharat is a full-stack tourism information platform designed to help users explore India's states, cities, and tourist destinations through a structured and easy-to-navigate web application.
 
