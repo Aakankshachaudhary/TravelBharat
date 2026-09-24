@@ -6,7 +6,10 @@ The project organizes tourism information such as destination descriptions, cate
 
 ## 🌐 Live Demo
 
-**Live Website:** Coming Soon
+🌐 **Frontend:** https://6ab51a0d25be4c30658693f8--dazzling-gumption-c2852a.netlify.app/
+
+🔗 **Backend API:** https://travelbharat-ebff.onrender.com/
+
 **GitHub Repository:** [TravelBharat](https://github.com/Aakankshachaudhary/TravelBharat)
 
 ---
