@@ -3,9 +3,7 @@ function authHeaders() {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
-const API_BASE_URL = (
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api"
-).replace(/\/$/, "");
+const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api`;
 
 const GET_CACHE_TTL = 30_000;
 const getCache = new Map();
